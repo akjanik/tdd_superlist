@@ -40,6 +40,8 @@ class NewVisitorTest(LiveServerTestCase):
         # After hitting enter, page updates, and now the page lists
         # "1: Buy peacock feathers" as an item in a to-do list
         inputbox.send_keys(Keys.ENTER)
+        user_list_url = self.browser.current_url
+        self.assertRegex(user_list_url, '/lists/.+')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
 
         # There is a still a text box allowing to add a new item
@@ -52,8 +54,35 @@ class NewVisitorTest(LiveServerTestCase):
         self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
 
-        # Page generates unique url for use - there is some explaantory
-        # text to that effect
-        # After visiting url - user's to-do list is there
+        # Now a new user, Francis, comeas along to the site.
+
+        ## We use a new browser session to make sure that no ifno
+        ## of user1 is coming through from cookies
+        self.browser.quit()
+        self.browser = webdriver.Firefox()
+
+        # Francis visits the hp. There is no sign of user1 list
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feahers', page_text)
+        self.assertNotIn('make a fly', page_text)
+
+        # Francis starts a new list by entering a new item
+        inputbox   = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
+
+        # Frank gets his own unique url
+        francis_list_url = self.browser.current_url
+        self.assertRegex(francis_list_url, '/lists/.+')
+        self.assertNotEqual(francis_list_url, user_list_url)
+
+        # No trace of user1 list here
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feahers', page_text)
+        self.assertIn('Buy milk', page_text)
+
+
         self.fail('Finish the test!')
+        # After visiting url - user's to-do list is there
         # browser.quit()
