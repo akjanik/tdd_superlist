@@ -54,6 +54,18 @@ class NewVisitorTest(LiveServerTestCase):
         self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')
         self.check_for_row_in_list_table('1: Buy peacock feathers')
 
+
+    def test_multiple_users_can_start_lists_at_different_urls(self):
+        # Edith start a new todo list
+        self.browser.get(self.live_server_url)
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy peacock feathers')
+        inputbox.send_keys(Keys.ENTER)
+        self.check_for_row_in_list_table('1: Buy peacock feathers')
+
+        # She notices that her list has a unique URL
+        user_list_url = self.browser.current_url
+        self.assertRegex(user_list_url, '/lists/.+')
         # Now a new user, Francis, comeas along to the site.
 
         ## We use a new browser session to make sure that no ifno
@@ -82,7 +94,5 @@ class NewVisitorTest(LiveServerTestCase):
         self.assertNotIn('Buy peacock feahers', page_text)
         self.assertIn('Buy milk', page_text)
 
-
-        self.fail('Finish the test!')
         # After visiting url - user's to-do list is there
         # browser.quit()
